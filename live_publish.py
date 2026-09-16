@@ -12,7 +12,7 @@ import MetaTrader5 as mt5
 from dotenv import load_dotenv
 from live_demo import (DB, LOGIN, PASSWORD, SERVER, SYMBOL, MT5_PATH, UZ, PM, TPK, SLK,
                        H_INI, H_FIN, MAX_TRADES_DIA, MAX_LOSS_DIA_PCT, RISK, RISK_RED,
-                       DD_RED_PCT, MAGIC, SPREAD_MAX_PTS, db_init, registrar_demo,
+                       DD_RED_PCT, MAGIC, MAXHOLD_VELAS, SPREAD_MAX_PTS, db_init, registrar_demo,
                        actualizar_cierre, peak_previo, flujo_live, bayes_live, monte_carlo_live)
 
 load_dotenv()
@@ -24,7 +24,7 @@ def publicar(senal):
     SIG.parent.mkdir(parents=True, exist_ok=True)
     senal["epoch"] = int(time.time())
     tmp = SIG.with_suffix(".tmp")
-    tmp.write_text(json.dumps(senal), encoding="utf-8")
+    tmp.write_text(json.dumps(senal), encoding="utf-16")   # UTF-16: formato nativo que MQL5 lee por defecto
     os.replace(tmp, SIG)   # atomico: el EA nunca lee a medias
 
 def main():
@@ -105,7 +105,9 @@ def main():
         peak = max(peak_previo(), acc.equity)
         dd_pct = (peak - acc.equity) / peak * 100 if peak > 0 else 0.0
         riesgo_pct = RISK * 100 if dd_pct <= DD_RED_PCT else RISK_RED * 100
+        tick = mt5.symbol_info_tick(SYMBOL)
         razon = None
+        if tick is None: razon = "sin_tick"
         if hora < H_INI or hora >= H_FIN: razon = f"fuera_sesion h={hora}"
         elif n_dia >= MAX_TRADES_DIA: razon = f"max_trades_dia={n_dia}"
         elif pnl_dia <= -bal * MAX_LOSS_DIA_PCT / 100.0: razon = f"max_loss_dia pnl={pnl_dia:.2f}"
@@ -118,6 +120,10 @@ def main():
             c = sqlite3.connect(DB)
             c.execute("INSERT INTO no_trades(ts,symbol,z,p_up,p_mc,razon) VALUES(?,?,?,?,?,?)",
                       (ts, SYMBOL, zv, pv, p_mc, razon)); c.commit(); c.close()
+            publicar({"action": "FLAT", "symbol": SYMBOL, "price": float(tick.bid) if tick else 0.0,
+                      "atr": av, "sl": 0.0, "tp": 0.0, "lot": 0.0, "z": zv, "p_up": pv,
+                      "p_mc": p_mc, "magic": MAGIC, "maxhold_min": MAXHOLD_VELAS * 15,
+                      "razon": razon})
             print(f"[{k}] FLAT {razon} dd={dd_pct:.1f}%", flush=True)
         else:
             sl_d = SLK * av
@@ -125,11 +131,11 @@ def main():
             step = float(info.volume_step) or 0.01
             lote = round(max(float(info.volume_min), min(float(info.volume_max),
                      round(lote_raw / step) * step)), 2)
-            tick = mt5.symbol_info_tick(SYMBOL)
             publicar({"action": "BUY", "symbol": SYMBOL, "price": float(tick.ask),
                       "atr": av, "sl": round(tick.ask - sl_d, 2),
                       "tp": round(tick.ask + TPK * av, 2), "lot": lote,
-                      "z": zv, "p_up": pv, "p_mc": p_mc, "magic": MAGIC, "maxhold_min": 90})
+                      "z": zv, "p_up": pv, "p_mc": p_mc, "magic": MAGIC,
+                      "maxhold_min": MAXHOLD_VELAS * 15, "razon": "senal_BUY"})
             print(f"[{k}] SENAL PUBLICADA BUY lote={lote} sl={tick.ask-sl_d:.2f} "
                   f"tp={tick.ask+TPK*av:.2f} z={zv:.2f} p={pv:.3f} mc={p_mc:.2f}", flush=True)
         time.sleep(a.interval)

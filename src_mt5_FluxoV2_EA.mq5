@@ -21,12 +21,19 @@ string SIGF = "fluxov2_signal.json";
 string LOGF = "fluxov2_ea.log";
 double g_peak = 0.0;
 datetime g_lastbeat = 0;
+string g_sig_act = "-";
+long   g_sig_ep = 0;
+string g_sig_razon = "-";
 
 int OnInit()
 {
    EventSetTimer(5);
    g_peak = AccountInfoDouble(ACCOUNT_EQUITY);
-   Log("EA INIT mode=" + (string)InpMode + " peak=" + DoubleToString(g_peak, 2));
+   Log("EA INIT BUILD=16sep-C mode=" + (string)InpMode + " maxhold=" + (string)InpMaxHoldMin
+       + " be=" + DoubleToString(InpBE_ATR, 2) + " fresh=" + (string)InpFreshSeg
+       + " maxspread=" + (string)InpMaxSpreadPts + " maxtrades=" + (string)InpMaxTradesDia
+       + " maxloss=" + DoubleToString(InpMaxLossDiaPct, 1) + " ddpause=" + DoubleToString(InpDDPausePct, 1)
+       + " sym=" + InpSymbol + " magic=" + (string)InpMagic + " peak=" + DoubleToString(g_peak, 2));
    return(INIT_SUCCEEDED);
 }
 void OnDeinit(const int r) { EventKillTimer(); Log("EA DEINIT"); }
@@ -206,10 +213,14 @@ void OnTimer()
       double eq = AccountInfoDouble(ACCOUNT_EQUITY);
       if(eq > g_peak) g_peak = eq;
       Log("BEAT eq=" + DoubleToString(eq, 2) + " peak=" + DoubleToString(g_peak, 2)
-          + " tradesHoy=" + (string)TradesHoy() + " pnlDia=" + DoubleToString(PnlDia(), 2));
+          + " tradesHoy=" + (string)TradesHoy() + " pnlDia=" + DoubleToString(PnlDia(), 2)
+          + " sig=" + g_sig_act + " ep=" + (string)g_sig_ep + " razon=" + g_sig_razon);
    }
    string j = LeerSenal();
    if(j == "") return;
+   g_sig_act   = JStr(j, "action");
+   g_sig_razon = JStr(j, "razon");
+   g_sig_ep    = (long)JNum(j, "epoch", 0);
    double ep = JNum(j, "epoch", 0);
    if(ep <= 0) { Log("senal_invalida_sin_epoch"); return; }
    if(TimeGMT() - (datetime)ep > InpFreshSeg) return; // senal vieja, silencio
