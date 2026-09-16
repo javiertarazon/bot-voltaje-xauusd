@@ -127,3 +127,26 @@ sin slippage intravela en backtest; senal sobre vela M15 CERRADA (latencia hasta
   Common\Files\fluxov2_ea.log | memoria: py db_check.py -> cert_db.txt
 - NO lanzar correr_demo_loop.bat y EA modo 1 a la vez (doble ejecucion).
 - Si algo cuelga: los watchdogs matan/reinician solos cada ciclo (90s max de parada).
+## 9. RECARGA DEL EA TRAS RECOMPILAR (importante)
+MT5 NO recarga automaticamente el .ex5 cuando se compila desde un MetaEditor
+externo (fuera del terminal). Sintoma tipico: el log sigue con el formato antiguo
+y los cambios no se aplican. Procedimiento obligatorio tras cada recompilacion:
+1) Seleccionar el grafico donde esta el EA.
+2) Pulsar F7 (propiedades del EA) y revisar las entradas:
+   InpMode=0 (sombra) | InpMaxHoldMin=900 | InpBE_ATR=0.0 | InpFreshSeg=180
+   InpMaxTradesDia=3 | InpMaxLossDiaPct=2.0 | InpDDPausePct=10.0
+   InpMaxSpreadPts=30 | InpSymbol=XAUUSD | InpMagic=20260915
+3) Pulsar OK -> MT5 reinicializa el EA y carga el .ex5 nuevo.
+4) Verificar en Common\Files\fluxov2_ea.log la linea de arranque con volcado de
+   configuracion, que debe empezar por: "EA INIT BUILD=16sep-C mode=0 maxhold=900
+   be=0.00 fresh=180 ...". Si maxhold no es 900 o be no es 0.00, los inputs
+   guardados en el grafico son antiguos: corregirlos en F7 y volver a OK.
+5) Comprobar que los latidos (BEAT) incluyen el sufijo "sig=... ep=... razon=...",
+   lo que confirma que corre la build nueva.
+
+## 10. DELIMITACION DE FORMATOS (bug resuelto el 16/09/2026)
+El parser del EA (JNum/JStr) necesita el JSON en el mismo encoding que FileOpen
+espera por defecto: UTF-16LE. live_publish.py escribe fluxov2_signal.json en
+UTF-16LE con BOM (FF FE) para que el EA lo lea correctamente. Si algun dia el
+EA registra "senal_invalida_sin_epoch" de forma repetida, la causa es un
+desajuste de encoding del JSON, no un problema de la estrategia.
