@@ -1,0 +1,22 @@
+{
+  "broker_activo": "deriv_demo",
+  "symbol": "XAUUSD",
+  "timeframes_historia": ["M1", "M5", "M15"],
+  "fecha_inicio_historia": "2022-01-01",
+  "risk_pct_por_trade": 0.5,
+  "risk_reducido_pct": 0.25,
+  "risk_boost_mes_pct": 0.35,
+  "max_daily_loss_pct": 2.0,
+  "max_trades_dia": 3,
+  "magic": 20260915,
+  "data_dir": "data",
+  "estrategia": "fluxov2_long",
+  "uz": 1.0,
+  "pm": 0.55,
+  "tp_k": 2.0,
+  "sl_k": 0.8,
+  "max_hold": 60,
+  "sesion_utc": [7, 20],
+  "solo_long": true,
+  "filtro_expansion": false
+}

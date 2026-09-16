@@ -1,0 +1,27 @@
+combinaciones=64
+=== TOP 8 (solo LONG + sesion 7-20UTC + max3/dia) ===
+uz=1.0 pm=0.55 TP=2.0 SL=0.8 hold=60 f_exp=False | n=525 win=34.7% PF=1.29 tot=+461.2 exp=+0.88 dd=85.4 score=+418.5
+uz=1.0 pm=0.6 TP=2.0 SL=0.8 hold=60 f_exp=False | n=519 win=34.5% PF=1.28 tot=+451.7 exp=+0.87 dd=93.3 score=+405.1
+uz=1.0 pm=0.55 TP=2.0 SL=0.8 hold=40 f_exp=False | n=525 win=34.9% PF=1.28 tot=+445.8 exp=+0.85 dd=82.0 score=+404.8
+uz=1.0 pm=0.55 TP=2.0 SL=1.0 hold=60 f_exp=False | n=515 win=39.0% PF=1.25 tot=+450.6 exp=+0.88 dd=106.6 score=+397.3
+uz=1.0 pm=0.6 TP=2.0 SL=0.8 hold=40 f_exp=False | n=519 win=34.7% PF=1.27 tot=+433.6 exp=+0.84 dd=86.7 score=+390.3
+uz=1.0 pm=0.6 TP=2.0 SL=1.0 hold=60 f_exp=False | n=509 win=38.9% PF=1.24 tot=+436.7 exp=+0.86 dd=106.6 score=+383.3
+uz=1.0 pm=0.55 TP=2.0 SL=1.0 hold=40 f_exp=False | n=515 win=38.8% PF=1.23 tot=+416.1 exp=+0.81 dd=107.4 score=+362.4
+uz=1.0 pm=0.6 TP=2.0 SL=1.0 hold=40 f_exp=False | n=509 win=38.7% PF=1.22 tot=+398.4 exp=+0.78 dd=106.6 score=+345.1
+MEJOR: uz=1.0 pm=0.55 TP=2.0 SL=0.8 hold=60 f_exp=False
+trades=525 win=34.7% PF=1.29 total=+461.2 dd=85.4 hold=5.5
+--- MENSUAL ---
+  2025-01: -0.6 | 46
+  2025-02: -11.1 | 38
+  2025-03: +36.6 | 45
+  2025-04: +31.2 | 41
+  2025-05: +52.4 | 46
+  2025-06: +5.7 | 41
+  2025-07: +21.7 | 40
+  2025-08: +14.4 | 37
+  2025-09: -23.1 | 50
+  2025-10: +120.8 | 46
+  2025-11: +163.0 | 45
+  2025-12: +50.2 | 50
+MOTIVOS: {'SL': 342, 'TP': 182, 'SL_amb': 1}
+RIESGO VIVO: base 0.5%/trade; dd>100pts o 3 SL seguidas -> 0.25%; mes>+100pts -> 0.35%; max 3/dia; pausa dia si -2%; sesion 7-20 UTC.

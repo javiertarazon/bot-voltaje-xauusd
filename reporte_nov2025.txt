@@ -1,0 +1,42 @@
+=== ANALISIS NOV-2025 (mejor mes +163.0 pts) ===
+nov: n=46 win=43.5% PF=2.11 exp=+3.94
+resto: n=479 win=33.8% exp=+0.58
+PRECIO NOV: open=3996.26 close=4222.05 cambio=+225.8 max=4245.13 min=3928.78 rango=316.3
+dias Up 15/29 M15 Up 52.7% ATRnov=7.92 vs ATRanual=4.68
+HOLD nov=6.7 vs resto=5.3
+TP-rate nov=43.5% vs resto=33.8%
+HORA UTC nov (n|pnl|exp):
+  07h: n=5 pnl=+25.8 exp=+5.16
+  08h: n=3 pnl=-16.3 exp=-5.43
+  09h: n=2 pnl=+9.9 exp=+4.93
+  10h: n=2 pnl=+9.6 exp=+4.80
+  11h: n=5 pnl=-31.6 exp=-6.31
+  12h: n=4 pnl=+50.0 exp=+12.51
+  13h: n=7 pnl=+4.5 exp=+0.64
+  14h: n=5 pnl=-17.3 exp=-3.46
+  15h: n=5 pnl=+43.1 exp=+8.62
+  16h: n=5 pnl=+74.9 exp=+14.97
+  18h: n=2 pnl=+2.9 exp=+1.45
+  19h: n=1 pnl=+25.9 exp=+25.87
+HORA resto exp: 07h:+0.7, 08h:-0.2, 09h:+0.5, 10h:-1.2, 11h:-0.3, 12h:+2.3, 13h:+1.1, 14h:+0.3, 15h:-0.7, 16h:+1.8, 17h:-0.0, 18h:+0.9, 19h:+2.0, 20h:-0.9
+DIA SEMANA nov:
+  Friday: n=7 pnl=+52.5 exp=+7.50
+  Monday: n=9 pnl=+26.8 exp=+2.98
+  Thursday: n=10 pnl=+31.3 exp=+3.13
+  Tuesday: n=10 pnl=+67.0 exp=+6.70
+  Wednesday: n=10 pnl=+3.8 exp=+0.38
+TOP 5 nov:
+  2025-11-18 16:15:00+00:00 hold=48 +26.6 TP
+  2025-11-13 19:30:00+00:00 hold=23 +25.9 TP
+  2025-11-21 15:45:00+00:00 hold=4 +21.9 TP
+  2025-11-25 16:00:00+00:00 hold=4 +21.3 TP
+  2025-11-20 12:00:00+00:00 hold=4 +19.9 TP
+PEORES 3 nov:
+  2025-11-20 14:30:00+00:00 hold=4 -10.2 SL
+  2025-11-12 18:15:00+00:00 hold=3 -9.1 SL
+  2025-11-21 14:45:00+00:00 hold=3 -8.4 SL
+--- REGLAS FLUXOV3 PARA REPLICAR ---
+1. Full-size solo si ATR14>ATR100 y dia previo Up; si no half/FLAT.
+2. Operar solo horas calientes tabla; fuera FLAT.
+3. Trailing a breakeven en +1.0*ATR.
+4. Tras 2 TP/dia, max 1 mas.

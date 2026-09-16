@@ -1,0 +1,22 @@
+=== METRICAS PROFESIONALES 2025 FluxoV2 LONG (M15 XAUUSD) ===
+trades=525 periodo=2025-01-06 -> 2025-12-31
+WINRATE=34.67% (182/525) PROFIT_FACTOR=1.29 EXPECTANCY=+0.879 pts
+TOTAL=+461.2 pts (~+461 USD @0.01) AVG_WIN=+11.42 AVG_LOSS=-4.71 PAYOFF=2.42
+MAX_DRAWDOWN=85.4 pts CALMAR=5.40 ULCER=34.92 TIEMPO_EN_DD=90.3% REC_MAX=49 trades
+SHARPE*=+2.36 SORTINO*=+9.96 (*anualizado por trades, rf=0)
+BEST=+38.07 WORST=-13.02 RACHA_W=6 RACHA_L=13
+MESES_POS=9/12 HOLD_MEDIO=5.5 velas
+--- MENSUAL ---
+  2025-01: -0.6 pts | n=46 | win=33% | exp=-0.01
+  2025-02: -11.1 pts | n=38 | win=32% | exp=-0.29
+  2025-03: +36.6 pts | n=45 | win=38% | exp=+0.81
+  2025-04: +31.2 pts | n=41 | win=37% | exp=+0.76
+  2025-05: +52.4 pts | n=46 | win=37% | exp=+1.14
+  2025-06: +5.7 pts | n=41 | win=32% | exp=+0.14
+  2025-07: +21.7 pts | n=40 | win=35% | exp=+0.54
+  2025-08: +14.4 pts | n=37 | win=35% | exp=+0.39
+  2025-09: -23.1 pts | n=50 | win=26% | exp=-0.46
+  2025-10: +120.8 pts | n=46 | win=37% | exp=+2.63
+  2025-11: +163.0 pts | n=45 | win=42% | exp=+3.62
+  2025-12: +50.2 pts | n=50 | win=34% | exp=+1.00
+NOTA: spread 0.16 incluido, sin comision/swap/slippage. 0.01 lote ~= 1 USD/pt.

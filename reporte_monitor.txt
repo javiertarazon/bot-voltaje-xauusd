@@ -1,0 +1,11 @@
+=== MONITOR FLUXOV2 LIVE DEMO 2026-09-15 19:38:36.024285+00:00 ===
+trades cerrados=0 no_trades registradas=13 samples equity=13
+sin trades cerrados todavia. El bot sigue supervisando.
+--- top no_trades (por que NO opera) ---
+     4  sin_senal z=0.20 p=0.904
+     4  sin_senal z=-2.04 p=0.862
+     1  z=1.70 p=0.98 mc=0.14
+     1  z=1.69 p=0.98 mc=0.16
+     1  z=1.68 p=0.98 mc=0.16
+     1  z=1.67 p=0.98 mc=0.16
+     1  z=1.60 p=0.98 mc=0.15

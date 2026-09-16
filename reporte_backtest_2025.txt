@@ -1,0 +1,24 @@
+=== BACKTEST 2025 XAUUSD M15 FluxoVoltaic (uz=1.0 pm=0.55) ===
+velas=23585 2025-01-01 23:00:00+00:00 -> 2025-12-31 21:45:00+00:00
+coste spread=0.16 TP=1.2*ATR SL=0.8*ATR maxhold=60 velas
+TRADES=2133 wins=890 WINRATE=41.7% PF=0.99
+EXPECTANCY=-0.02 pts/trade TOTAL=-39.55 pts (~-40 USD @0.01 lotes)
+MAX_DRAWDOWN=337.10 pts SHARPE*=-0.13 (*anualizado por trades)
+AVG_WIN=6.54 AVG_LOSS=-4.72
+LONG n=1137 win=44.1% pnl=170.2 | SHORT n=996 win=39.1% pnl=-209.8
+HOLD medio=3.1 velas M15
+MOTIVOS: {'SL': 1219, 'TP': 890, 'SL_amb': 24}
+--- MENSUAL (pts | n) ---
+  2025-01: -53.8 pts | 167 trades
+  2025-02: +38.8 pts | 157 trades
+  2025-03: -58.7 pts | 171 trades
+  2025-04: +17.3 pts | 184 trades
+  2025-05: -32.6 pts | 180 trades
+  2025-06: -39.2 pts | 179 trades
+  2025-07: +85.6 pts | 190 trades
+  2025-08: +15.9 pts | 160 trades
+  2025-09: -117.4 pts | 190 trades
+  2025-10: +145.4 pts | 201 trades
+  2025-11: +155.1 pts | 157 trades
+  2025-12: -195.9 pts | 197 trades
+archivos: data/trades_2025.csv (2133) data/equity_2025.csv

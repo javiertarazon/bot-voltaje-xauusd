@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+data/
+*.db
+*.log
+.venv/
+cert_*.txt
+cert_sintax_*.txt
+EJECUTAR_*.log

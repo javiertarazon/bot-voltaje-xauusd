@@ -1,0 +1,6 @@
+FASE 2a OK datos=xauusd_M15.csv n=60000
+z media=-0.000 std=0.996
+p_up media=0.537 p_up ultimo=0.981
+Q ultimo=10168.0 I ultimo=1489.344
+px ultimo=4300.71
+muestra -> D:\proyectos_javier\proyectos\xauusd-trader\data\flux_muestra.csv
