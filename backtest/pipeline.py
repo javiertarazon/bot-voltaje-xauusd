@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import sys
 
-BASE = Path(__file__).parent
+BASE = Path(__file__).resolve().parent.parent
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     periodo_inicio = cfg.get("backtest_params.periodo_inicio")
     periodo_fin = cfg.get("backtest_params.periodo_fin")
 
-    print(f"Backtest {simbolo} {periodo_inicio} → {periodo_fin}", flush=True)
+    print(f"Backtest {simbolo} {periodo_inicio} -> {periodo_fin}", flush=True)
     resultado = engine.ejecutar(simbolo=simbolo, periodo_inicio=periodo_inicio, periodo_fin=periodo_fin)
 
     T = resultado.trades

@@ -2,6 +2,8 @@
 
 Trader algorítmico XAUUSD M15 basado en analogía fluido-eléctrica + filtro Bayesiano + Monte Carlo.
 
+Versión actual: **0.3.0**. Cambios y métricas: [docs/CAMBIOS_v0.3.0.md](docs/CAMBIOS_v0.3.0.md).
+
 ## Arquitectura Modular
 
 ```

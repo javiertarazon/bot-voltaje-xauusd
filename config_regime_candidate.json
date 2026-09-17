@@ -1,0 +1,25 @@
+{
+  "estrategia_params": {
+    "uz": 2.0,
+    "pm": 0.60
+  },
+  "sesion_params": {
+    "ini_hora_utc": 13,
+    "fin_hora_utc": 17
+  },
+  "backtest_params": {
+    "costes_spread": 0.30,
+    "max_paths_mc": 2000,
+    "umbral_mc": 0.30
+  },
+  "regimen": {
+    "max_atr_ratio": 2.0,
+    "require_up_prev": true,
+    "min_trend_strength": 0.25
+  },
+  "riesgo_params": {
+    "base_pct": 0.25,
+    "reducido_pct": 0.125,
+    "max_losses_month": 2
+  }
+}

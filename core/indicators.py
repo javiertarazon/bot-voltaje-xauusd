@@ -77,6 +77,7 @@ def calcular_monte_carlo(
     atr: float,
     paths: int = 1000,
     horizon: int = 20,
+    seed: int | None = 42,
 ) -> float:
     """Probabilidad de que TP toque antes que SL vía caminos GBM.
 
@@ -89,7 +90,8 @@ def calcular_monte_carlo(
     sigma = float(np.std(lr) + 1e-9)
     av = float(atr)
     p0 = float(px.iloc[-1])
-    ps = p0 * np.exp(np.cumsum(np.random.normal(mu, sigma, (paths, horizon)), axis=1))
+    rng = np.random.default_rng(seed)
+    ps = p0 * np.exp(np.cumsum(rng.normal(mu, sigma, (paths, horizon)), axis=1))
     hit_tp = ps.max(axis=1) >= p0 + av
     hit_sl = ps.min(axis=1) <= p0 - 0.7 * av
     p_ok = float(((hit_tp) & (~hit_sl)).mean() + 0.5 * (hit_tp & hit_sl).mean())

@@ -46,7 +46,11 @@ class BacktestEngine:
             else:
                 raise FileNotFoundError(f"Sin datos para {simbolo}")
 
-        d = preparar_backtest(df, self.config, periodo_inicio, periodo_fin)
+        # Los indicadores necesitan historial anterior al período evaluado.
+        # Calcularlos antes de cortar evita reinicios artificiales de ATR/z/Bayes.
+        d = preparar_backtest(df, self.config)
+        from core.data import filtrar_periodo
+        d = filtrar_periodo(d, periodo_inicio, periodo_fin)
 
         uz = self.config.get("estrategia_params.uz", self.config.get("estrategia.uz", 1.0))
         pm = self.config.get("estrategia_params.pm", self.config.get("estrategia.pm", 0.55))
@@ -58,6 +62,13 @@ class BacktestEngine:
         mc_paths = self.config.get("backtest_params.max_paths_mc", 2000)
         mc_horizon = self.config.get("backtest_params.horizon_mc", 20)
         mc_umbral = self.config.get("backtest_params.umbral_mc", 0.30)
+        ses_ini, ses_fin = self.config.get("sesion_params.ini_hora_utc", 7), self.config.get("sesion_params.fin_hora_utc", 18)
+        filtro_exp = bool(self.config.get("filtro_expansion", self.config.get("regimen.activo", False)))
+        max_atr_ratio = self.config.get("regimen.max_atr_ratio", None)
+        require_up_prev = bool(self.config.get("regimen.require_up_prev", False))
+        min_trend_strength = float(self.config.get("regimen.min_trend_strength", 0.0))
+        ema20 = d["close"].ewm(span=20, adjust=False).mean() if min_trend_strength > 0 else None
+        ema50 = d["close"].ewm(span=50, adjust=False).mean() if min_trend_strength > 0 else None
 
         z_vals = d["z"].values if "z" in d.columns else np.zeros(len(d))
         p_vals = d["p_up"].values if "p_up" in d.columns else np.zeros(len(d))
@@ -68,9 +79,37 @@ class BacktestEngine:
         tm = d["time"] if "time" in d.columns else pd.Series(range(len(d)))
 
         trs = []
+        trades_by_day = {}
+        month_loss_streak = {}
+        max_month_losses = int(self.config.get("riesgo_params.max_losses_month", 0))
         i = 120
         n = len(d)
         while i < n - 2:
+            if "time" in d.columns:
+                hora = int(pd.Timestamp(d["time"].iloc[i]).hour)
+                if hora < ses_ini or hora >= ses_fin:
+                    i += 1
+                    continue
+                day = pd.Timestamp(d["time"].iloc[i]).date()
+                if trades_by_day.get(day, 0) >= int(self.config.get("riesgo_params.max_trades_dia", 3)):
+                    i += 1
+                    continue
+                month = pd.Timestamp(d["time"].iloc[i]).strftime("%Y-%m")
+                if max_month_losses > 0 and month_loss_streak.get(month, 0) >= max_month_losses:
+                    i += 1
+                    continue
+            if filtro_exp and "exp" in d.columns and not bool(d["exp"].iloc[i]):
+                i += 1
+                continue
+            if max_atr_ratio is not None and "atr_ratio" in d.columns and float(d["atr_ratio"].iloc[i]) > float(max_atr_ratio):
+                i += 1
+                continue
+            if min_trend_strength > 0 and float(ema20.iloc[i] - ema50.iloc[i]) / max(float(atr_vals[i]), 1e-12) < min_trend_strength:
+                i += 1
+                continue
+            if require_up_prev and "up_prev" in d.columns and not bool(d["up_prev"].iloc[i]):
+                i += 1
+                continue
             lado = 0
             if solo_long:
                 if z_vals[i] > uz and p_vals[i] > pm:
@@ -147,8 +186,15 @@ class BacktestEngine:
                 "z": float(z_vals[i]),
                 "p_up": float(p_vals[i]),
                 "p_mc": p_mc,
+                "atr": a,
+                "expansion": int(bool(d["exp"].iloc[i])) if "exp" in d.columns else 0,
                 "bars": j_out - i,
             })
+            if "time" in d.columns:
+                trades_by_day[day] = trades_by_day.get(day, 0) + 1
+                month = pd.Timestamp(d["time"].iloc[i]).strftime("%Y-%m")
+                month_loss_streak[month] = month_loss_streak.get(month, 0) + (1 if pnl <= 0 else 0)
+            # Una nueva entrada sólo puede producirse después del cierre.
             i = j_out + 1
 
         T = pd.DataFrame(trs)

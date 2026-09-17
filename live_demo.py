@@ -20,12 +20,15 @@ LOGIN = os.getenv("MT5_LOGIN", ""); PASSWORD = os.getenv("MT5_PASSWORD", "")
 SERVER = os.getenv("MT5_SERVER", "Deriv-Demo"); SYMBOL = os.getenv("MT5_SYMBOL", "XAUUSD")
 MT5_PATH = os.getenv("MT5_PATH", r"D:\mt5\terminal64.exe")
 import MetaTrader5 as mt5
+from core.indicators import calcular_flujo, calcular_atr, calcular_bayes, calcular_monte_carlo
+from core.risk import calcular_riesgo_adaptativo
 
 UZ = float(CFG.get("uz", 1.0)); PM = float(CFG.get("pm", 0.55))
 TPK = float(CFG.get("tp_k", 2.0)); SLK = float(CFG.get("sl_k", 0.8))
 MAXHOLD_VELAS = int(CFG.get("max_hold", 60)); HOLD_SEC = MAXHOLD_VELAS * 15 * 60
 H_INI, H_FIN = int(CFG.get("sesion_utc", [7, 20])[0]), int(CFG.get("sesion_utc", [7, 20])[1])
 MAX_TRADES_DIA = int(CFG.get("max_trades_dia", 3)); MAX_LOSS_DIA_PCT = float(CFG.get("max_daily_loss_pct", 2.0))
+PMC_MIN = float(CFG.get("backtest_params", {}).get("umbral_mc", 0.30))
 RISK = float(CFG.get("risk_pct_por_trade", 0.5)) / 100.0
 RISK_RED = float(CFG.get("risk_reducido_pct", 0.25)) / 100.0
 DD_RED_PCT = 10.0
@@ -56,32 +59,14 @@ def peak_previo():
     return float(r) if r else 0.0
 
 def flujo_live(df):
-    px = df["close"].astype(float)
-    vol = df["tick_volume"].astype(float) if "tick_volume" in df.columns else pd.Series(1.0, index=df.index)
-    ret = px.diff().fillna(0.0)
-    atr = (px.rolling(14).max() - px.rolling(14).min()).bfill().fillna(1.0)
-    vol_med = vol.rolling(50).mean().bfill().fillna(1.0) + 1e-9
-    R = atr / vol_med; I = ret / (R + 1e-9)
-    C = (px.rolling(20).max() - px.rolling(20).min()).fillna(0.0)
-    Q = (np.sign(ret) * vol).rolling(20).sum().fillna(0.0)
-    z = ((I - I.rolling(100).mean()) / (I.rolling(100).std() + 1e-9)).fillna(0.0)
-    return px, Q, z, atr
+    flujo = calcular_flujo(df)
+    return df["close"].astype(float), flujo["Q"], flujo["z"], calcular_atr(df, 14)
 
 def bayes_live(Q, z, n=150):
-    qm = abs(Q).rolling(50, min_periods=1).mean() + 1e-9
-    like = (0.5 + 0.3*np.tanh(Q/qm) + 0.2*np.tanh(z/2.0)).clip(0.05, 0.95)
-    p = 0.5; lam = 0.98
-    for li in like.iloc[-n:]:
-        prev = lam*p + (1-lam)*0.5; li = float(li)
-        p = li*prev/(li*prev + (1-li)*(1-prev) + 1e-12)
-    return p
+    return float(calcular_bayes(Q, z).iloc[-1])
 
 def monte_carlo_live(px, atr, paths=1000, hor=20):
-    win = px.iloc[-100:].values
-    lr = np.diff(np.log(win + 1e-12)); mu, sg = float(np.mean(lr)), float(np.std(lr) + 1e-9)
-    av = float(atr.iloc[-1]); p0 = float(px.iloc[-1])
-    ps = p0*np.exp(np.cumsum(np.random.normal(mu, sg, (paths, hor)), axis=1))
-    return float((((ps.max(1) >= p0+av)) & ~((ps.min(1) <= p0-0.7*av))).mean())
+    return calcular_monte_carlo(px, float(atr.iloc[-1]), paths=paths, horizon=hor, seed=42)
 
 def send_market(lote, sl, tp, comment="FluxoV2"):
     tick = mt5.symbol_info_tick(SYMBOL)
@@ -223,13 +208,14 @@ def main():
             time.sleep(a.interval); continue
         peak = max(peak_previo(), acc.equity)
         dd_pct = (peak - acc.equity) / peak * 100 if peak > 0 else 0.0
-        riesgo_pct = RISK * 100 if dd_pct <= DD_RED_PCT else RISK_RED * 100
+        atr_med = float(atr.iloc[-100:].median())
+        riesgo_pct = calcular_riesgo_adaptativo(RISK * 100, RISK_RED * 100, dd_pct, av, atr_med)
         razon = None
         if hora < H_INI or hora >= H_FIN: razon = f"fuera_sesion h={hora}"
         elif n_dia >= MAX_TRADES_DIA: razon = f"max_trades_dia={n_dia}"
         elif pnl_dia <= -bal * MAX_LOSS_DIA_PCT / 100.0: razon = f"max_loss_dia pnl={pnl_dia:.2f}"
         elif info.spread > SPREAD_MAX_PTS: razon = f"spread_alto={info.spread}"
-        elif av < 0.16 * 3: razon = f"atr_bajo={av:.2f}"
+        elif av < float(CFG.get("backtest_params", {}).get("costes_spread", 0.16)) * 3: razon = f"atr_bajo={av:.2f}"
         elif not (zv > UZ and pv > PM): razon = f"sin_senal z={zv:.2f} p={pv:.3f}"
         elif p_mc <= PMC_MIN: razon = f"mc_bajo={p_mc:.2f}"
         if razon:
@@ -241,7 +227,10 @@ def main():
             sl_d = SLK * av
             lote_raw = (bal * riesgo_pct / 100.0) / (sl_d * 100.0)   # 1.00 precio = 100 USD/lote verificado
             step = float(info.volume_step) or 0.01
-            lote = round(max(float(info.volume_min), min(float(info.volume_max), round(lote_raw / step) * step)), 2)
+            if lote_raw < float(info.volume_min):
+                print(f"[{k}] SKIP riesgo: lote calculado menor al mínimo del broker", flush=True)
+                time.sleep(a.interval); continue
+            lote = round(max(float(info.volume_min), min(float(info.volume_max), np.floor(lote_raw / step) * step)), 8)
             tick = mt5.symbol_info_tick(SYMBOL)
             entry, sl, tp = tick.ask, round(tick.ask - sl_d, 2), round(tick.ask + TPK * av, 2)
             r, fill = send_market(lote, sl, tp)

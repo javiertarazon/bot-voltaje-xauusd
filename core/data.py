@@ -60,6 +60,7 @@ def preparar_backtest(
     d["z"] = flujo_df["z"]
     d["p_up"] = calcular_bayes(flujo_df["Q"], flujo_df["z"])
     d["atr"] = calcular_atr(d, 14)
+    d["atr_ratio"] = d["atr"] / (calcular_atr_medio(d, 100) + 1e-12)
 
     reg = calcular_regimen(d)
     d["exp"] = reg["exp"]

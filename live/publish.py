@@ -18,10 +18,13 @@ sys.path.insert(0, str(BASE))
 
 load_dotenv(BASE / ".env")
 
-from config.validator import load_config
-from core.indicators import calcular_flujo, calcular_bayes
+from config.validator import load_config, load_adaptive_config
+from core.indicators import calcular_flujo, calcular_bayes, calcular_regimen, calcular_atr
+from core.risk import calcular_riesgo_adaptativo
 
-CONFIG = load_config(str(BASE / "config.json"))
+CONFIG = (load_adaptive_config(str(BASE / "config.json"), str(BASE / "config_adaptive.json"))
+          if os.getenv("FLUX_ADAPTIVE", "0") == "1"
+          else load_config(str(BASE / "config.json")))
 DB = BASE / "trading_log.db"
 COMMON_FILES = Path(os.getenv("MT5_COMMON_FILES", r"C:\Users\javie\AppData\Roaming\MetaQuotes\Terminal\Common\Files"))
 SIG = COMMON_FILES / "fluxov2_signal.json"
@@ -53,6 +56,12 @@ def db_init():
         id INTEGER PRIMARY KEY, ts TEXT, balance REAL, equity REAL, riesgo_pct REAL)""")
     c.execute("""CREATE TABLE IF NOT EXISTS estado(k TEXT PRIMARY KEY, v TEXT)""")
     c.commit(); c.close()
+
+def peak_previo():
+    c = sqlite3.connect(DB)
+    row = c.execute("SELECT MAX(equity) FROM equity").fetchone()
+    c.close()
+    return float(row[0] or 0.0)
 
 
 def publicar(senal):
@@ -111,6 +120,7 @@ def main():
         df = pd.DataFrame(rates).iloc[:-1].reset_index(drop=True)
         df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
         flujo_df = calcular_flujo(df)
+        flujo_df["exp"] = calcular_regimen(df)["exp"]
         zv, av = float(flujo_df["z"].iloc[-1]), float(flujo_df["atr"].iloc[-1]) if "atr" in flujo_df.columns else 1.0
         pv = calcular_bayes(flujo_df["Q"], flujo_df["z"])
         pv = float(pv.iloc[-1])
@@ -146,9 +156,10 @@ def main():
             c.execute("INSERT OR REPLACE INTO estado(k,v) VALUES('last_out_ticket',?)", (str(d.ticket),))
             c.commit(); c.close()
 
-        peak = max(0.0, acc.equity)
+        peak = max(peak_previo(), acc.equity)
         dd_pct = (peak - acc.equity) / peak * 100 if peak > 0 else 0.0
-        riesgo_pct = RISK * 100 if dd_pct <= DD_RED_PCT else RISK_RED * 100
+        atr_med = float(calcular_atr(df, 14).iloc[-100:].median())
+        riesgo_pct = calcular_riesgo_adaptativo(RISK * 100, RISK_RED * 100, dd_pct, av, atr_med)
         tick = mt5.symbol_info_tick(SYMBOL)
         razon = None
         if tick is None: razon = "sin_tick"
@@ -156,9 +167,12 @@ def main():
         elif n_dia >= MAX_TRADES_DIA: razon = f"max_trades_dia={n_dia}"
         elif pnl_dia <= -bal * MAX_LOSS_DIA_PCT / 100.0: razon = f"max_loss_dia pnl={pnl_dia:.2f}"
         elif info.spread > SPREAD_MAX_PTS: razon = f"spread_alto={info.spread}"
-        elif av < 0.16 * 3: razon = f"atr_bajo={av:.2f}"
+        elif av < float(CONFIG.get("estrategia_params.atr_min_mult_spread", 3)) * float(CONFIG.get("backtest_params.costes_spread", 0.16)):
+            razon = f"atr_bajo={av:.2f}"
         elif not (zv > UZ and pv > PM): razon = f"sin_senal z={zv:.2f} p={pv:.3f}"
         elif p_mc <= 0.30: razon = f"mc_bajo={p_mc:.2f}"
+        elif CONFIG.get("filtro_expansion", CONFIG.get("regimen.activo", False)) and not bool(flujo_df.get("exp", pd.Series([0])).iloc[-1]):
+            razon = "fuera_expansion"
 
         if razon:
             c = sqlite3.connect(DB)
@@ -170,10 +184,14 @@ def main():
             print(f"[{k}] FLAT {razon} dd={dd_pct:.1f}%", flush=True)
         else:
             sl_d = SLK * av
-            lote_raw = (bal * riesgo_pct / 100.0) / (sl_d * 100.0)
+            tick_size = float(info.trade_tick_size or info.point)
+            tick_value = float(info.trade_tick_value or 0.0)
+            sl_usd_lote = (sl_d / tick_size) * tick_value if tick_size > 0 and tick_value > 0 else sl_d * 100.0
+            lote_raw = (bal * riesgo_pct / 100.0) / sl_usd_lote
             step = float(info.volume_step) or 0.01
-            lote = round(max(float(info.volume_min), min(float(info.volume_max),
-                     round(lote_raw / step) * step)), 2)
+            lote = max(float(info.volume_min), min(float(info.volume_max),
+                     np.floor(lote_raw / step) * step))
+            lote = round(lote, 8)
             publicar({"action": "BUY", "symbol": SYMBOL, "price": float(tick.ask),
                       "atr": av, "sl": round(tick.ask - sl_d, 2),
                       "tp": round(tick.ask + TPK * av, 2), "lot": lote,

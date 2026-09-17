@@ -62,6 +62,23 @@ def load_config(path: str = "config.json") -> Config:
         raise ValueError(f"Configuración inválida:\n  " + "\n  ".join(errors))
     return Config(raw, raw_path=str(p.resolve()))
 
+def load_adaptive_config(base_path: str = "config.json", override_path: str = "config_adaptive.json") -> Config:
+    """Carga config base y aplica overrides adaptativos de forma explícita."""
+    base = load_config(base_path).as_dict()
+    p = Path(override_path)
+    if not p.exists():
+        raise FileNotFoundError(f"Overrides adaptativos no encontrados: {override_path}")
+    overrides = json.loads(p.read_text(encoding="utf-8"))
+    for section, values in overrides.items():
+        if isinstance(values, dict) and isinstance(base.get(section), dict):
+            base[section].update(values)
+        else:
+            base[section] = values
+    errors = _validate(base)
+    if errors:
+        raise ValueError("Configuración adaptativa inválida:\n  " + "\n  ".join(errors))
+    return Config(base, raw_path=str(Path(base_path).resolve()))
+
 
 def _validate(cfg: dict) -> list:
     errs = []

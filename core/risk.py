@@ -1,6 +1,20 @@
 """Gestión de riesgo centralizada."""
 import numpy as np
 
+def calcular_riesgo_adaptativo(base_pct: float, reducido_pct: float,
+                               dd_pct: float, atr_actual: float,
+                               atr_mediano: float, racha_perdidas: int = 0,
+                               max_dd_pct: float = 10.0) -> float:
+    """Riesgo porcentual adaptado a drawdown, volatilidad y racha."""
+    riesgo = float(base_pct)
+    if dd_pct >= max_dd_pct:
+        riesgo = min(riesgo, float(reducido_pct))
+    if atr_mediano > 0 and atr_actual > atr_mediano * 1.5:
+        riesgo *= 0.5
+    if racha_perdidas >= 3:
+        riesgo *= 0.5
+    return max(0.0, min(float(base_pct), riesgo))
+
 
 def calcular_lote(
     balance: float,
@@ -30,7 +44,10 @@ def calcular_lote(
         return volume_min
     lote_raw = riesgo_usd / sl_usd_por_lote
     step = volume_step if volume_step > 0 else 0.01
-    lote = round(max(volume_min, min(volume_max, lote_raw / step) * step), 6)
+    # No forzar el volumen mínimo: podría superar el riesgo máximo autorizado.
+    if lote_raw < volume_min:
+        return 0.0
+    lote = round(max(volume_min, min(volume_max, np.floor(lote_raw / step) * step)), 6)
     return lote
 
 
@@ -79,13 +96,14 @@ def verificar_cortacircuitos(estado: dict, config: "Config") -> tuple:
         return False, f"dd={dd_pct:.1f}%>red{red}%"
 
     spread = estado.get("spread", 0.0)
+    point = estado.get("point", 1.0)
     spread_max = config.get("estrategia_params.spread_max_pts", config.get("estrategia.spread_max_pts", 30))
     if spread > spread_max:
         return False, f"spread_alto={spread}"
 
     atr = estado.get("atr", 0.0)
     atr_min_mult = config.get("estrategia_params.atr_min_mult_spread", config.get("estrategia.atr_min_mult_spread", 3))
-    if atr < spread_max / atr_min_mult if spread_max > 0 else False:
+    if atr < (spread * point * atr_min_mult) if spread > 0 and point > 0 else False:
         return False, f"atr_bajo={atr:.2f}"
 
     return True, ""
