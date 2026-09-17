@@ -20,8 +20,8 @@ else:
     r = T["pnl"].astype(float).values
     w = float((r > 0).mean()); gp = r[r > 0].sum(); gl = abs(r[r <= 0].sum())
     pf = float(gp / (gl + 1e-9)); exp = float(r.mean())
-    eq = CAP0 = 10000.0 + r.cumsum()
-    pk = eq.cummax(); dd = (pk - eq) / pk * 100
+    eq = 10000.0 + np.cumsum(r)
+    pk = np.maximum.accumulate(eq)
     L.append(f"WINRATE={w:.1%} PF={pf:.2f} exp=${exp:+.2f} total=${r.sum():+.2f} maxDD={dd.max():.2f}%")
     L.append(f"motivos cierre: {T['cierre'].value_counts().to_dict()}")
     L.append(f"riesgo_pct usado: {T['riesgo_pct'].unique().tolist()}")

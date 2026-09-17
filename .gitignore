@@ -8,3 +8,10 @@ data/
 cert_*.txt
 cert_sintax_*.txt
 EJECUTAR_*.log
+reportes/
+plot/
+debug/
+__debug/
+*.mp4
+*.zip
+*.tar.gz
