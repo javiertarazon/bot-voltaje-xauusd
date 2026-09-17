@@ -1,11 +1,21 @@
-=== MONITOR FLUXOV2 LIVE DEMO 2026-09-15 19:38:36.024285+00:00 ===
-trades cerrados=0 no_trades registradas=13 samples equity=13
-sin trades cerrados todavia. El bot sigue supervisando.
+=== MONITOR FLUXOV2 LIVE DEMO 2026-09-17 03:51:25.172690+00:00 ===
+trades cerrados=1 no_trades registradas=242 samples equity=391
+WINRATE=100.0% PF=2070000000.00 exp=$+2.07 total=$+2.07 maxDD=0.00%
+motivos cierre: {'cierre_test': 1}
+riesgo_pct usado: [0.0]
+z medio entrada=0.00 p_up medio=0.000 mc medio=0.000
+--- ultimos 10 trades ---
+  2026-09-16T11:42 lote=0.01 pnl=$2.07 cierre=cierre_test z=0.00
+--- ACCION DE RIESGO (mi decision como gestor) ---
+Metricas dentro de lo esperado del backtest (win~34%, PF~1.2). Mantener 0.5%.
 --- top no_trades (por que NO opera) ---
-     4  sin_senal z=0.20 p=0.904
-     4  sin_senal z=-2.04 p=0.862
-     1  z=1.70 p=0.98 mc=0.14
-     1  z=1.69 p=0.98 mc=0.16
-     1  z=1.68 p=0.98 mc=0.16
-     1  z=1.67 p=0.98 mc=0.16
-     1  z=1.60 p=0.98 mc=0.15
+    57  spread_alto=51
+    45  fuera_sesion h=2
+    35  fuera_sesion h=3
+    25  fuera_sesion h=1
+    14  sin_senal z=0.25 p=0.568
+    14  sin_senal z=-1.05 p=0.582
+    14  sin_senal z=-0.89 p=0.234
+    14  sin_senal z=-0.34 p=0.500
+    12  sin_senal z=-1.76 p=0.001
+    12  sin_senal z=-1.66 p=0.992

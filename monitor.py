@@ -3,6 +3,7 @@ Uso: py monitor.py   -> reporte_monitor.txt
 """
 import sqlite3
 from pathlib import Path
+import numpy as np
 import pandas as pd
 BASE = Path(__file__).parent
 DB = BASE / "trading_log.db"
@@ -22,6 +23,7 @@ else:
     pf = float(gp / (gl + 1e-9)); exp = float(r.mean())
     eq = 10000.0 + np.cumsum(r)
     pk = np.maximum.accumulate(eq)
+    dd = (pk - eq) / pk * 100
     L.append(f"WINRATE={w:.1%} PF={pf:.2f} exp=${exp:+.2f} total=${r.sum():+.2f} maxDD={dd.max():.2f}%")
     L.append(f"motivos cierre: {T['cierre'].value_counts().to_dict()}")
     L.append(f"riesgo_pct usado: {T['riesgo_pct'].unique().tolist()}")
